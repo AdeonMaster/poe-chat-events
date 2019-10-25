@@ -1,0 +1,14 @@
+{
+  "name": "poe-chat-events",
+  "version": "1.0.0",
+  "description": "Path of Exile chat events listener",
+  "main": "index.mjs",
+  "scripts": {
+    "test": "node --experimental-modules example/listener.mjs"
+  },
+  "author": "AdeonMaster",
+  "license": "MIT",
+  "dependencies": {
+    "always-tail2": "^1.0.0"
+  }
+}

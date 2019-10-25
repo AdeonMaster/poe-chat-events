@@ -1,0 +1,6 @@
+2019/02/25 21:51:33 12256046 a21 [INFO Client 9528] #Wind_Reaperr: u must have smoked something good
+2019/02/25 21:51:33 12256046 a21 [INFO Client 9528] : The specified character does not exist.
+2019/02/25 21:51:33 12256046 a21 [INFO Client 9528] : AFK mode is now ON.
+2019/02/25 21:51:33 12256046 a21 [INFO Client 9528] : AFK mode is now ON.
+2019/02/25 21:51:33 12256046 a21 [INFO Client 9528] : AFK mode is now OFF.
+2019/02/25 21:51:33 12256046 a21 [INFO Client 9528] @AdeonMaster: ggwp
