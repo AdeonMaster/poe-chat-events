@@ -12,14 +12,28 @@ export const parseLogLine = line => {
 const regExprMap = {
   [CHAT_EVENT.CHARACTER_NOT_FOUND]: /^: The specified character does not exist\.$/,
   [CHAT_EVENT.CHARACTER_INFO]: /^: (?<character>.+) is a level (?<level>\d+) (?<characterClass>.+) in the (?<league>.+) league (.+)\.$/,
-  [CHAT_EVENT.AFK_MODE]: /^: AFK mode is now (?<state>.+)\.$/,
+  [CHAT_EVENT.AFK_MODE]: /^: AFK mode is now (?<state>.+)\.(?: Autoreply "(?<autoreplyMessage>.+)")?$/,
   [CHAT_EVENT.GLOBAL_MESSAGE]: /^#(?:<(?<guild>.+)> )?(?<character>.+): (?<message>.+)$/,
   [CHAT_EVENT.PARTY_MESSAGE]: /^%(?:<(?<guild>.+)> )?(?<character>.+): (?<message>.+)$/,
   [CHAT_EVENT.WHISPER_MESSAGE]: /^@(?<direction>From|To) (?:<(?<guild>.+)> )?(?<character>.+): (?<message>.+)$/,
   [CHAT_EVENT.TRADE_MESSAGE]: /^\$(?:<(?<guild>.+)> )?(?<character>.+): (?<message>.+)$/,
   [CHAT_EVENT.GUILD_MESSAGE]: /^&(?:<(?<guild>.+)> )?(?<character>.+): (?<message>.+)$/,
   [CHAT_EVENT.AREA_ENTER]: /^: You have entered (?<area>.+)\.$/,
-  [CHAT_EVENT.LOCAL_MESSAGE]: /^(?<character>.+): (?<message>.+)$/
+  [CHAT_EVENT.LOCAL_MESSAGE]: /^(?<character>.+): (?<message>.+)$/,
+  [CHAT_EVENT.CHARACTER_AGE]: /^: Your character was created (?:(?<days>\d+) days?, )?(?:(?<hours>\d+) hours?, )?(?:(?<minutes>\d+) minutes?, )?(and )?(?<seconds>\d+) seconds? ago\.$/,
+  [CHAT_EVENT.CHARACTER_DEATH]: /^: (?<character>.+) has been slain\.$/,
+  [CHAT_EVENT.CHARACTER_LEVEL_UP]: /^: (?<character>.+) \((?<characterClass>.+)\) is now level (?<level>\d+)$/,
+  [CHAT_EVENT.PLAYED]: /^: You have played for (?:(?<hours>\d+) hours?, )?(?:(?<minutes>\d+) minutes?, )?(?:and )?(?<seconds>\d+) seconds?\.$/,
+  [CHAT_EVENT.DEATHS]: /^: You have died (?<deaths>\d+) times\.$/,
+  [CHAT_EVENT.ITEM_ON_CURSOR_DESTROYED]: /^: Item on cursor destroyed\.$/,
+  [CHAT_EVENT.TRADE_ACCEPTED]: /^: Trade accepted\.$/,
+  [CHAT_EVENT.TRADE_DECLINED]: /^: Trade declined\.$/,
+  [CHAT_EVENT.MONSTERS_REMAIN]: /^: (?<monsters>\d+) monsters? remains?\.$/,
+  [CHAT_EVENT.MISSION_COMPLETE]: /^: Mission complete\.$/,
+  [CHAT_EVENT.NPC_SPEECH]: /^(?<npc>.+): (?<text>.+)$/,
+  [CHAT_EVENT.PASSIVE_POINT_RECEIVED]: /^: You have received (?<points>a|\d+) Passive (?<pointType>Skill|Respec) Points?\.$/,
+  [CHAT_EVENT.CHARACTER_AREA_LEAVE]: /^: (?<character>.+) has left the area\.$/,
+  [CHAT_EVENT.CHARACTER_AREA_JOIN]: /^: (?<character>.+) has joined the area\.$/
 };
 
 export const extractChatEvent = line => {
@@ -28,12 +42,6 @@ export const extractChatEvent = line => {
 
     if (match) {
       switch (type) {
-        case CHAT_EVENT.CHARACTER_NOT_FOUND:
-          return {
-            type,
-            raw: line
-          };
-
         case CHAT_EVENT.CHARACTER_INFO: {
           const { character, level, characterClass, league } = match.groups;
           const isOnline = match[5] !== 'who is not currently online';
@@ -52,12 +60,13 @@ export const extractChatEvent = line => {
         }
 
         case CHAT_EVENT.AFK_MODE: {
-          const { state } = match.groups;
+          const { state, autoreplyMessage } = match.groups;
 
           return {
             type,
             raw: line,
-            state
+            state,
+            autoreplyMessage
           };
         }
 
@@ -143,6 +152,116 @@ export const extractChatEvent = line => {
           };
         }
 
+        case CHAT_EVENT.CHARACTER_AGE: {
+          const { days, hours, minutes, seconds } = match.groups;
+
+          return {
+            type,
+            raw: line,
+            days,
+            hours,
+            minutes,
+            seconds
+          };
+        }
+
+        case CHAT_EVENT.CHARACTER_DEATH: {
+          const { character } = match.groups;
+
+          return {
+            type,
+            raw: line,
+            character
+          };
+        }
+
+        case CHAT_EVENT.CHARACTER_LEVEL_UP: {
+          const { character, characterClass, level } = match.groups;
+
+          return {
+            type,
+            raw: line,
+            character,
+            characterClass,
+            level
+          };
+        }
+
+        case CHAT_EVENT.PLAYED: {
+          const { hours, minutes, seconds } = match.groups;
+
+          return {
+            type,
+            raw: line,
+            hours,
+            minutes,
+            seconds
+          };
+        }
+
+        case CHAT_EVENT.DEATHS: {
+          const { deaths } = match.groups;
+
+          return {
+            type,
+            raw: line,
+            deaths
+          };
+        }
+
+        case CHAT_EVENT.MONSTERS_REMAIN: {
+          const { monsters } = match.groups;
+
+          return {
+            type,
+            raw: line,
+            monsters
+          };
+        }
+
+        case CHAT_EVENT.NPC_SPEECH: {
+          const { npc, text } = match.groups;
+
+          return {
+            type,
+            raw: line,
+            npc,
+            text
+          };
+        }
+
+        case CHAT_EVENT.PASSIVE_POINT_RECEIVED: {
+          const { points, pointType } = match.groups;
+
+          return {
+            type,
+            raw: line,
+            points: points === 'a' ? 1 : parseInt(points),
+            pointType: pointType.toLowerCase()
+          };
+        }
+
+        case CHAT_EVENT.CHARACTER_AREA_LEAVE:
+        case CHAT_EVENT.CHARACTER_AREA_JOIN: {
+          const { character } = match.groups;
+
+          return {
+            type,
+            raw: line,
+            character
+          };
+        }
+
+        case CHAT_EVENT.CHARACTER_NOT_FOUND:
+        case CHAT_EVENT.ITEM_ON_CURSOR_DESTROYED:
+        case CHAT_EVENT.TRADE_ACCEPTED:
+        case CHAT_EVENT.TRADE_DECLINED:
+        case CHAT_EVENT.MISSION_COMPLETE:
+          return {
+            type,
+            raw: line
+          };
+
         default:
           break;
       }
@@ -150,7 +269,7 @@ export const extractChatEvent = line => {
   }
 
   return {
-    type: CHAT_EVENT.UNKNOWN,
+    type: '',
     raw: line
   };
 }
